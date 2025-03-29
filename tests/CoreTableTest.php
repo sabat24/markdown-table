@@ -12,7 +12,11 @@ class CoreTableTest extends TestCase
 {
     public function testSimpleTable(): void
     {
-        $t = new Table(options: ['delimiterStart' => false, 'delimiterEnd' => false]);
+        $t = new Table(options: [
+            'delimiterStart' => false,
+            'delimiterEnd' => false,
+            'headerSeparatorPadding' => true,
+        ]);
         $t->addColumn(0, new Column('Col.A'));
 
         $this->assertInstanceOf(Column::class, $t->getColumn(0));
@@ -32,7 +36,10 @@ class CoreTableTest extends TestCase
 
     public function testConstructorWithColumns(): void
     {
-        $t = new Table(['first_name', 'last_name'], ['delimiterStart' => false, 'delimiterEnd' => false]);
+        $t = new Table(
+            ['first_name', 'last_name'],
+            ['delimiterStart' => false, 'delimiterEnd' => false, 'headerSeparatorPadding' => true],
+        );
 
         $expect = 'first_name | last_name   ' . PHP_EOL
             . '---------- | ------------' . PHP_EOL
@@ -52,7 +59,10 @@ class CoreTableTest extends TestCase
      */
     public function testDroppingColumn(): void
     {
-        $t = new Table(['first_name', 'last_name'], ['delimiterStart' => false, 'delimiterEnd' => false]);
+        $t = new Table(
+            ['first_name', 'last_name'],
+            ['delimiterStart' => false, 'delimiterEnd' => false, 'headerSeparatorPadding' => true],
+        );
 
         $expect = 'last_name   ' . PHP_EOL
             . '------------' . PHP_EOL
@@ -74,7 +84,10 @@ class CoreTableTest extends TestCase
      */
     public function testChangeColumnTitle(): void
     {
-        $t = new Table(['first_name', 'last_name'], ['delimiterStart' => false, 'delimiterEnd' => false]);
+        $t = new Table(
+            ['first_name', 'last_name'],
+            ['delimiterStart' => false, 'delimiterEnd' => false, 'headerSeparatorPadding' => true],
+        );
 
         $expect = 'first_name | surname     ' . PHP_EOL
             . '---------- | ------------' . PHP_EOL

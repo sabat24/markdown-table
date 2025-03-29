@@ -20,7 +20,7 @@ final class Table
     private int $column_count;
 
     /**
-     * @var array{alignDelimiters: bool, delimiterStart: bool, delimiterEnd: bool, padding: bool, autoHeaders: bool} Configuration options
+     * @var array{alignDelimiters: bool, delimiterStart: bool, delimiterEnd: bool, padding: bool, autoHeaders: bool, headerSeparatorPadding: bool} Configuration options
      */
     private array $options = [
         'alignDelimiters' => true,
@@ -28,6 +28,7 @@ final class Table
         'delimiterEnd' => true,
         'padding' => true,
         'autoHeaders' => false,
+        'headerSeparatorPadding' => false,
     ];
 
     /**
@@ -51,7 +52,7 @@ final class Table
      * ['first', 'next', 'last']
      *
      * @param array<int|string, string> $keys Optional an array of column names. Default: []
-     * @param array{alignDelimiters?: bool, delimiterStart?: bool, delimiterEnd?: bool, padding?: bool, autoHeaders?: bool} $options Optional configuration options. Default: []
+     * @param array{alignDelimiters?: bool, delimiterStart?: bool, delimiterEnd?: bool, padding?: bool, autoHeaders?: bool, headerSeparatorPadding?: bool} $options Optional configuration options. Default: []
      */
     public function __construct(array $keys = [], array $options = [])
     {
@@ -142,7 +143,7 @@ final class Table
     /**
      * Set configuration options for the table
      *
-     * @param array{alignDelimiters?: bool, delimiterStart?: bool, delimiterEnd?: bool, padding?: bool, autoHeaders?: bool} $options Options to set
+     * @param array{alignDelimiters?: bool, delimiterStart?: bool, delimiterEnd?: bool, padding?: bool, autoHeaders?: bool, headerSeparatorPadding?: bool} $options Options to set
      */
     public function setOptions(array $options): Table
     {
@@ -154,7 +155,7 @@ final class Table
     /**
      * Get current configuration options
      *
-     * @return array{alignDelimiters: bool, delimiterStart: bool, delimiterEnd: bool, padding: bool, autoHeaders: bool} Current options
+     * @return array{alignDelimiters: bool, delimiterStart: bool, delimiterEnd: bool, padding: bool, autoHeaders: bool, headerSeparatorPadding: bool} Current options
      */
     public function getOptions(): array
     {
@@ -193,7 +194,7 @@ final class Table
     /**
      * Set alignment for columns
      *
-     * @param array<int, string>|string $align Either a single alignment for all columns
+     * @param array<array-key, string>|string $align Either a single alignment for all columns
      *                            or an array of alignments for each column.
      *                            Valid values: 'l'/'left', 'r'/'right', 'c'/'center'
      * @return $this
@@ -311,9 +312,11 @@ final class Table
          */
         $result = [];
         foreach ($this->columns as $column) {
-            $result[] = $column->createHeaderSeparator();
+            $result[] = $column->createHeaderSeparator(
+                $this->options['padding'] && !$this->options['headerSeparatorPadding'],
+            );
         }
-        yield $this->formatRow($result);
+        yield $this->formatRow($result, true);
         unset($result);
 
         /**
@@ -334,24 +337,30 @@ final class Table
      * Format a row according to options
      *
      * @param array<int, string> $cells Array of cell contents
+     * @param bool $isHeaderSeparator Whether this row is a header separator
      * @return string Formatted row
      */
-    private function formatRow(array $cells): string
+    private function formatRow(array $cells, bool $isHeaderSeparator = false): string
     {
-        $separator = $this->options['padding'] ? sprintf(' %s ', self::$separator) : self::$separator;
-        $row = implode($separator, $cells);
+        $shouldPad = $this->options['padding'] && (!$isHeaderSeparator || $this->options['headerSeparatorPadding']);
+
+        $parts = [];
 
         // add start delimiter if enabled
         if ($this->options['delimiterStart']) {
-            $row = ($this->options['padding'] ? sprintf('%s ', self::$separator) : self::$separator) . $row;
+            $parts[] = $shouldPad ? self::$separator . ' ' : self::$separator;
         }
+
+        // add the cells with separators between them
+        $separator = $shouldPad ? ' ' . self::$separator . ' ' : self::$separator;
+        $parts[] = implode($separator, $cells);
 
         // add end delimiter if enabled
         if ($this->options['delimiterEnd']) {
-            $row = $row . ($this->options['padding'] ? sprintf(' %s', self::$separator) : self::$separator);
+            $parts[] = $shouldPad ? ' ' . self::$separator : self::$separator;
         }
 
-        return $row;
+        return implode('', $parts);
     }
 
     /**
