@@ -1,0 +1,61 @@
+{
+  "name": "sabat24/markdown-table",
+  "description": "Generate GitHub Flavored Markdown tables.",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Paweł Sabatowski",
+      "email": "sabat24@users.noreply.github.com",
+      "role": "developer"
+    },
+    {
+      "name": "Titus Wormer",
+      "email": "tituswormer@gmail.com",
+      "role": "contributor"
+    },
+    {
+      "name": "Gregor J.",
+      "email": "gregor-j@users.noreply.github.com",
+      "role": "contributor"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/sabat24/markdown-table/issues"
+  },
+  "keywords": [
+    "markdown",
+    "table",
+    "markdown-table",
+    "array",
+    "php",
+    "gfm"
+  ],
+  "minimum-stability": "stable",
+  "require": {
+    "php": "^8.2",
+    "ext-mbstring": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.5",
+    "phpstan/phpstan": "^2.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "sabat24\\MarkdownTable\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\sabat24\\MarkdownTable\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "vendor/bin/phpunit",
+    "static": "vendor/bin/phpstan analyse --memory-limit=512M"
+  },
+  "scripts-descriptions": {
+    "test": "Run all unit tests.",
+    "static": "Perform a static analise."
+  }
+}
