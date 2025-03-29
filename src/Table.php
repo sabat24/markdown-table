@@ -41,6 +41,11 @@ final class Table
     private $stringLengthCallback = null;
 
     /**
+     * @var array<array-key, string>|string|null Stored alignment configuration for auto-headers
+     */
+    private string | array | null $pendingAlignments = null;
+
+    /**
      * Table constructor.
      * It is possible to define the columns using an array like this:
      * ['first', 'next', 'last']
@@ -195,6 +200,13 @@ final class Table
      */
     public function setAlignment(array | string $align): Table
     {
+        if ($this->options['autoHeaders'] && !$this->hasColumns()) {
+            // store alignments to apply after columns are created
+            $this->pendingAlignments = $align;
+
+            return $this;
+        }
+
         if (is_array($align)) {
             // apply different alignment for each column
             $colKeys = array_keys($this->columns);
@@ -235,6 +247,12 @@ final class Table
             }
             // remove the header row from data rows
             array_shift($rows);
+
+            // apply any pending alignments after columns are created
+            if ($this->pendingAlignments !== null) {
+                $this->setAlignment($this->pendingAlignments);
+                $this->pendingAlignments = null;
+            }
         }
 
         if (!$this->hasColumns()) {
