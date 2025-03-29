@@ -180,20 +180,17 @@ final class Column
     /**
      * Creates the column header separator string.
      *
+     * @param bool $ignoreHeaderPadding We do not want padding for header separator if true.
      * @return string The column header separator string.
      */
-    public function createHeaderSeparator(): string
+    public function createHeaderSeparator(bool $ignoreHeaderPadding = false): string
     {
+        $padding = $ignoreHeaderPadding ? 2 : 0;
+
         return match ($this->alignment) {
-            self::ALIGN_RIGHT => sprintf(
-                '%s:',
-                str_repeat('-', $this->length - 1),
-            ),
-            self::ALIGN_CENTER => sprintf(
-                ':%s:',
-                str_repeat('-', $this->length - 2),
-            ),
-            default => str_repeat('-', $this->length),
+            self::ALIGN_RIGHT => str_repeat('-', $this->length - 1 + $padding) . ':',
+            self::ALIGN_CENTER => ':' . str_repeat('-', $this->length - 2 + $padding) . ':',
+            default => str_repeat('-', $this->length + $padding),
         };
     }
 
