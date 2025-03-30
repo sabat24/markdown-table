@@ -51,14 +51,15 @@ final class Table
      * It is possible to define the columns using an array like this:
      * ['first', 'next', 'last']
      *
-     * @param array<int|string, string> $keys Optional an array of column names. Default: []
-     * @param array{alignDelimiters?: bool, delimiterStart?: bool, delimiterEnd?: bool, padding?: bool, autoHeaders?: bool, headerSeparatorPadding?: bool} $options Optional configuration options. Default: []
+     * @param array<int|string, string> $columnNames Optional an array of column names. Default: []
+     * @param array{ alignDelimiters?: bool, delimiterStart?: bool, delimiterEnd?: bool, padding?: bool, autoHeaders?: bool, headerSeparatorPadding?: bool } $options Optional configuration options. Default: []
+     * @param bool $useNamesAsPositions Controls how column positions and names are handled. When this parameter is true, the column name is used as the position identifier instead of using the array key. Default: false
      */
-    public function __construct(array $keys = [], array $options = [])
+    public function __construct(array $columnNames = [], array $options = [], bool $useNamesAsPositions = false)
     {
         $this->clearColumns();
-        foreach ($keys as $key) {
-            $this->addColumn($key, new Column($key));
+        foreach ($columnNames as $position => $columnName) {
+            $this->addColumn($useNamesAsPositions ? $columnName : $position, new Column($columnName));
         }
 
         $this->options = array_merge($this->options, $options);

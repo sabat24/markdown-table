@@ -16,7 +16,8 @@ class CoreTableTest extends TestCase
             'delimiterStart' => false,
             'delimiterEnd' => false,
             'headerSeparatorPadding' => true,
-        ]);
+        ], useNamesAsPositions: true);
+
         $t->addColumn(0, new Column('Col.A'));
 
         $this->assertInstanceOf(Column::class, $t->getColumn(0));
@@ -39,6 +40,7 @@ class CoreTableTest extends TestCase
         $t = new Table(
             ['first_name', 'last_name'],
             ['delimiterStart' => false, 'delimiterEnd' => false, 'headerSeparatorPadding' => true],
+            true,
         );
 
         $expect = 'first_name | last_name   ' . PHP_EOL
@@ -62,6 +64,7 @@ class CoreTableTest extends TestCase
         $t = new Table(
             ['first_name', 'last_name'],
             ['delimiterStart' => false, 'delimiterEnd' => false, 'headerSeparatorPadding' => true],
+            true,
         );
 
         $expect = 'last_name   ' . PHP_EOL
@@ -87,6 +90,7 @@ class CoreTableTest extends TestCase
         $t = new Table(
             ['first_name', 'last_name'],
             ['delimiterStart' => false, 'delimiterEnd' => false, 'headerSeparatorPadding' => true],
+            true,
         );
 
         $expect = 'first_name | surname     ' . PHP_EOL
@@ -109,7 +113,7 @@ class CoreTableTest extends TestCase
      */
     public function testExceptionNonExistentColumnPosition(): void
     {
-        $t = new Table(['first_name']);
+        $t = new Table(['first_name'], [], true);
         self::expectException(\RuntimeException::class);
         self::expectExceptionMessage('Column position last_name does not exist!');
         $t->getColumn('last_name');
@@ -131,7 +135,7 @@ class CoreTableTest extends TestCase
      */
     public function testExceptionWithOneDimensionalArray(): void
     {
-        $t = new Table(['first_name', 'last_name']);
+        $t = new Table(['first_name', 'last_name'], [], true);
         self::expectException(\RuntimeException::class);
         self::expectExceptionMessage('Rows need to be an array of arrays.');
         /**
