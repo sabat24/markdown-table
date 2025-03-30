@@ -31,6 +31,21 @@ class TableTest extends TestCase
         ]));
     }
 
+    public function testTableWithColumnsConstructor(): void
+    {
+        $t = new Table(['Branch', 'Commit']);
+
+        $expect = '| Branch  | Commit           |' . PHP_EOL
+            . '|---------|------------------|' . PHP_EOL
+            . '| main    | 0123456789abcdef |' . PHP_EOL
+            . '| staging | fedcba9876543210 |' . PHP_EOL;
+
+        $this->assertEquals($expect, $t->getString([
+            ['main', '0123456789abcdef'],
+            ['staging', 'fedcba9876543210'],
+        ]));
+    }
+
     public function testTableWithAutoHeaders(): void
     {
         $t = new Table(options: ['autoHeaders' => true, 'headerSeparatorPadding' => true]);
