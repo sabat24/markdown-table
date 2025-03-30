@@ -143,9 +143,12 @@ echo $table->getString([
 
 ### Table Class
 
-#### `__construct(array $keys = [], array $options = [])`
+#### `__construct(array $columnNames = [], array $options = [], bool $useNamesAsPositions = false)`
 
-Creates a new table with optional column names and configuration options.
+Creates a new table with:
+- `$columnNames`: Optional array of column names
+- `$options`: Optional configuration options
+- `$useNamesAsPositions`: When true, uses column names as position identifiers instead of array keys (default: false)
 
 #### `addColumn(int|string $pos, Column $column): Table`
 
@@ -173,7 +176,9 @@ Sets a custom function to determine the visual length of strings, useful for han
 
 #### `setAlignment(array|string $align): Table`
 
-Sets alignment for one or all columns. Accepts 'l'/'left', 'r'/'right', 'c'/'center'.
+Sets alignment for columns. Accepts:
+- Single string for all columns: 'l'/'left', 'r'/'right', 'c'/'center'
+- Array of alignments for individual columns
 
 #### `setOptions(array $options): Table`
 
@@ -185,7 +190,7 @@ Gets current configuration options.
 
 #### `getString(array $rows): string`
 
-Generates a markdown table string from the given rows.
+Generates a Markdown table string from the given rows.
 
 ### Column Class
 
@@ -193,9 +198,12 @@ Generates a markdown table string from the given rows.
 
 Creates a new column with the specified title and optional alignment.
 
-#### `setAlignmentFromString($alignment): Column`
+#### `setAlignmentFromString(?string $alignment): Column`
 
-Sets the column alignment using a string ('l', 'r', 'c').
+Sets the column alignment using a string:
+- 'l' or 'left' for left alignment
+- 'r' or 'right' for right alignment
+- 'c' or 'center' for center alignment
 
 ### Options
 
@@ -220,6 +228,10 @@ Whether to end each row with the delimiter.
 ##### `autoHeaders` (bool, default: `false`)
 
 Whether to use the first row of data as headers.
+
+##### `headerSeparatorPadding` (bool, default: `false`)
+
+Whether to add padding spaces in the header separator row.
 
 ## Compatibility
 
