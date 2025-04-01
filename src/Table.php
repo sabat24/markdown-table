@@ -20,7 +20,7 @@ final class Table
     private int $column_count;
 
     /**
-     * @var array{alignDelimiters: bool, delimiterStart: bool, delimiterEnd: bool, padding: bool, autoHeaders: bool, headerSeparatorPadding: bool} Configuration options
+     * @var array{alignDelimiters: bool, delimiterStart: bool, delimiterEnd: bool, padding: bool, autoHeaders: bool, headerSeparatorPadding: bool, allowedTags: array<string>} Configuration options
      */
     private array $options = [
         'alignDelimiters' => true,
@@ -29,6 +29,7 @@ final class Table
         'padding' => true,
         'autoHeaders' => false,
         'headerSeparatorPadding' => false,
+        'allowedTags' => [],
     ];
 
     /**
@@ -52,7 +53,7 @@ final class Table
      * ['first', 'next', 'last']
      *
      * @param array<int|string, string> $columnNames Optional an array of column names. Default: []
-     * @param array{ alignDelimiters?: bool, delimiterStart?: bool, delimiterEnd?: bool, padding?: bool, autoHeaders?: bool, headerSeparatorPadding?: bool } $options Optional configuration options. Default: []
+     * @param array{ alignDelimiters?: bool, delimiterStart?: bool, delimiterEnd?: bool, padding?: bool, autoHeaders?: bool, headerSeparatorPadding?: bool, allowedTags?: array<string> } $options Optional configuration options. Default: []
      * @param bool $useNamesAsPositions Controls how column positions and names are handled. When this parameter is true, the column name is used as the position identifier instead of using the array key. Default: false
      */
     public function __construct(array $columnNames = [], array $options = [], bool $useNamesAsPositions = false)
@@ -144,7 +145,7 @@ final class Table
     /**
      * Set configuration options for the table
      *
-     * @param array{alignDelimiters?: bool, delimiterStart?: bool, delimiterEnd?: bool, padding?: bool, autoHeaders?: bool, headerSeparatorPadding?: bool} $options Options to set
+     * @param array{alignDelimiters?: bool, delimiterStart?: bool, delimiterEnd?: bool, padding?: bool, autoHeaders?: bool, headerSeparatorPadding?: bool, allowedTags?: array<string>} $options Options to set
      */
     public function setOptions(array $options): Table
     {
@@ -156,7 +157,7 @@ final class Table
     /**
      * Get current configuration options
      *
-     * @return array{alignDelimiters: bool, delimiterStart: bool, delimiterEnd: bool, padding: bool, autoHeaders: bool, headerSeparatorPadding: bool} Current options
+     * @return array{alignDelimiters: bool, delimiterStart: bool, delimiterEnd: bool, padding: bool, autoHeaders: bool, headerSeparatorPadding: bool, allowedTags: array<string>} Current options
      */
     public function getOptions(): array
     {
@@ -228,6 +229,89 @@ final class Table
     }
 
     /**
+     * Sanitizes a string while preserving allowed HTML tags
+     *
+     * @param string $value The string to sanitize
+     * @return string The sanitized string with allowed tags preserved
+     */
+    public function sanitizeWithAllowedTags(string $value): string
+    {
+        // if no allowed tags, just sanitize everything
+        if (empty($this->options['allowedTags'])) {
+            $sanitized = filter_var(
+                $value,
+                FILTER_SANITIZE_SPECIAL_CHARS,
+                FILTER_FLAG_STRIP_BACKTICK | FILTER_FLAG_STRIP_LOW,
+            );
+            if ($sanitized === false) {
+                throw new \RuntimeException('Failed to sanitize string');
+            }
+
+            return $sanitized;
+        }
+
+        // create a version of the string with all allowed tags replaced by placeholders
+        $safeValue = $value;
+        $tagReplacements = [];
+        $placeholderId = 0;
+
+        // build the allowed tags pattern
+        $allowedTagsPattern = implode('|', array_map(function ($tag) {
+            return preg_quote($tag, '/');
+        }, $this->options['allowedTags']));
+
+        // extract opening and self-closing tags
+        $openingTagPattern = "/<($allowedTagsPattern)(\s+[^>]*)?(\/?)>/i";
+        $safeValue = preg_replace_callback(
+            $openingTagPattern,
+            static function ($matches) use (&$tagReplacements, &$placeholderId) {
+                $placeholder = "___TAG_PLACEHOLDER_" . $placeholderId . "___";
+                $placeholderId++;
+                $tagReplacements[$placeholder] = $matches[0];
+
+                return $placeholder;
+            },
+            $safeValue,
+        );
+
+        if ($safeValue === null) {
+            throw new \RuntimeException('Failed to process HTML tags');
+        }
+
+        // extract closing tags
+        $closingTagPattern = "/<\/($allowedTagsPattern)>/i";
+        $safeValue = preg_replace_callback(
+            $closingTagPattern,
+            static function ($matches) use (&$tagReplacements, &$placeholderId) {
+                $placeholder = sprintf('___TAG_PLACEHOLDER_%d___', $placeholderId);
+                $placeholderId++;
+                $tagReplacements[$placeholder] = $matches[0];
+
+                return $placeholder;
+            },
+            $safeValue,
+        );
+
+        if ($safeValue === null) {
+            throw new \RuntimeException('Failed to process HTML tags');
+        }
+
+        $sanitized = htmlspecialchars(
+            $safeValue,
+            ENT_NOQUOTES | ENT_SUBSTITUTE | ENT_HTML5,
+            'UTF-8',
+            false,
+        );
+
+        // restore all allowed tags by replacing placeholders
+        foreach ($tagReplacements as $placeholder => $original) {
+            $sanitized = str_replace($placeholder, $original, $sanitized);
+        }
+
+        return $sanitized;
+    }
+
+    /**
      * Generate a Markdown table from the defined columns and their rows.
      *
      * @param array<array-key, array<array-key, bool|int|string|null>> $rows Rows of the Markdown table.
@@ -279,19 +363,17 @@ final class Table
                 // set an empty string for each expected column not defined in the row
                 $cell = '';
                 if (array_key_exists($pos, $row)) {
-                    $cell = filter_var(
-                        (string) $row[$pos],
-                        FILTER_SANITIZE_SPECIAL_CHARS,
-                        FILTER_FLAG_STRIP_BACKTICK | FILTER_FLAG_STRIP_LOW,
-                    );
-                    \assert(is_string($cell));
+                    $originalValue = (string) $row[$pos];
+
+                    // Sanitize the value with allowed tags preserved
+                    $cell = $this->sanitizeWithAllowedTags($originalValue);
+
                     // use the custom string length function instead of mb_strlen
                     if ($this->stringLengthCallback !== null) {
                         $column->setMaxLength($this->getStringLength($cell));
                     } else {
                         $column->setMaxLength(mb_strlen($cell));
                     }
-
                 }
                 $row[$pos] = $cell;
             }

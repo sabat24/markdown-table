@@ -139,6 +139,28 @@ echo $table->getString([
 ]);
 ```
 
+With allowed HTML tags:
+
+```php
+use sabat24\MarkdownTable\Table;
+
+$table = new Table(['Feature', 'Description']);
+$table->setOptions(['allowedTags' => ['br', 'strong', 'em']]);
+echo $table->getString([
+    ['Line breaks', 'First line<br/>Second line'],
+    ['Formatting', '<strong>Bold text</strong> and <em>italic text</em>'],
+]);
+```
+
+Yields:
+
+```markdown
+| Feature     | Description                                         |
+|-------------|-----------------------------------------------------|
+| Line breaks | First line<br/>Second line                          |
+| Formatting  | <strong>Bold text</strong> and <em>italic text</em> |
+```
+
 # API
 
 ### Table Class
@@ -232,6 +254,10 @@ Whether to use the first row of data as headers.
 ##### `headerSeparatorPadding` (bool, default: `false`)
 
 Whether to add padding spaces in the header separator row.
+
+##### `allowedTags` (array, default: `[]`)
+
+An array of HTML tags that should be preserved in the output. By default, all HTML is escaped, but you can specify tags like `['br', 'strong', 'em']` to allow these tags to remain unescaped in the generated table.
 
 ## Compatibility
 
