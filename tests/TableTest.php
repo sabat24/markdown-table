@@ -250,11 +250,11 @@ class TableTest extends TestCase
                     ['<br/>'],
                     ['c', 'y', 'some long line<br>second row'],
                 ],
-                'expected' => '| Col.A         | Col.B          | Col.C                                |' . PHP_EOL
-                    . '|---------------|----------------|--------------------------------------|' . PHP_EOL
-                    . '| a             | &#60;br /&#62; | z                                    |' . PHP_EOL
-                    . '| &#60;br/&#62; |                |                                      |' . PHP_EOL
-                    . '| c             | y              | some long line&#60;br&#62;second row |' . PHP_EOL,
+                'expected' => '| Col.A       | Col.B        | Col.C                              |' . PHP_EOL
+                    . '|-------------|--------------|------------------------------------|' . PHP_EOL
+                    . '| a           | &lt;br /&gt; | z                                  |' . PHP_EOL
+                    . '| &lt;br/&gt; |              |                                    |' . PHP_EOL
+                    . '| c           | y            | some long line&lt;br&gt;second row |' . PHP_EOL,
             ],
         ];
     }
@@ -281,6 +281,11 @@ class TableTest extends TestCase
     public static function sanitizeWithAllowedTagsDataProvider(): array
     {
         return [
+            'simple standalone gt with quotes' => [
+                'value' => 'lorem "quoted" -> ipsum',
+                'allowedTags' => [],
+                'expected' => 'lorem "quoted" -> ipsum',
+            ],
             'Self closing nested attribute' => [
                 'value' => '<strong>First line<br/>Second line</strong>',
                 'allowedTags' => ['br', 'strong'],
@@ -314,7 +319,7 @@ class TableTest extends TestCase
             'HTML entities within tags' => [
                 'value' => '<code>&lt;script&gt;alert("test");&lt;/script&gt;</code>',
                 'allowedTags' => ['code'],
-                'expected' => '<code>&lt;script&gt;alert("test");&lt;/script&gt;</code>',
+                'expected' => '<code>&amp;lt;script&amp;gt;alert("test");&amp;lt;/script&amp;gt;</code>',
             ],
             'Case sensitivity test' => [
                 'value' => '<STRONG>Uppercase tag</STRONG> and <strong>lowercase tag</strong>',
