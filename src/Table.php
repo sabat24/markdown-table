@@ -238,16 +238,7 @@ final class Table
     {
         // if no allowed tags, just sanitize everything
         if (empty($this->options['allowedTags'])) {
-            $sanitized = filter_var(
-                $value,
-                FILTER_SANITIZE_SPECIAL_CHARS,
-                FILTER_FLAG_STRIP_BACKTICK | FILTER_FLAG_STRIP_LOW,
-            );
-            if ($sanitized === false) {
-                throw new \RuntimeException('Failed to sanitize string');
-            }
-
-            return $sanitized;
+            return $this->sanitize($value);
         }
 
         // create a version of the string with all allowed tags replaced by placeholders
@@ -296,12 +287,7 @@ final class Table
             throw new \RuntimeException('Failed to process HTML tags');
         }
 
-        $sanitized = htmlspecialchars(
-            $safeValue,
-            ENT_NOQUOTES | ENT_SUBSTITUTE | ENT_HTML5,
-            'UTF-8',
-            false,
-        );
+        $sanitized = $this->sanitize($safeValue);
 
         // restore all allowed tags by replacing placeholders
         foreach ($tagReplacements as $placeholder => $original) {
@@ -309,6 +295,28 @@ final class Table
         }
 
         return $sanitized;
+    }
+
+    private function sanitize(string $input): string
+    {
+        // replace standalone > (not part of closing tags)
+        $input = preg_replace('/(?<![a-zA-Z0-9\/])>/', '___GT_PLACEHOLDER___', $input);
+        if ($input === null) {
+            throw new \RuntimeException('Failed to process HTML tags');
+        }
+
+        // replace standalone < (not forming opening tags)
+        $input = preg_replace('/<(?![a-zA-Z0-9\/])/', '___LT_PLACEHOLDER___', $input);
+        if ($input === null) {
+            throw new \RuntimeException('Failed to process HTML tags');
+        }
+
+        $sanitized = htmlspecialchars($input, ENT_NOQUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+
+        // restore our placeholders
+        $sanitized = str_replace('___GT_PLACEHOLDER___', '>', $sanitized);
+
+        return str_replace('___LT_PLACEHOLDER___', '<', $sanitized);
     }
 
     /**
