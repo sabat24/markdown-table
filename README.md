@@ -184,6 +184,10 @@ Retrieves a column at the specified position.
 
 Removes all columns from the table.
 
+#### `hasColumn(int|string $pos): bool`
+
+Checks if a column exists at the specified position.
+
 #### `hasColumns(): bool`
 
 Checks if the table has any columns defined.
