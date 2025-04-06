@@ -78,13 +78,24 @@ final class Table
     }
 
     /**
+     * Determine whether this table has column with specified position.
+     *
+     * @param int|string $pos
+     * @return bool
+     */
+    public function hasColumn(int | string $pos): bool
+    {
+        return array_key_exists($pos, $this->columns);
+    }
+
+    /**
      * Adds a column to the table.
      *
      * @param int|string $pos Unique name/id for the column position.
      */
     public function addColumn(int | string $pos, Column $column): Table
     {
-        if (!array_key_exists($pos, $this->columns)) {
+        if (!$this->hasColumn($pos)) {
             $this->column_count++;
         }
         $this->columns[$pos] = $column;
@@ -100,7 +111,7 @@ final class Table
      */
     public function getColumn(int | string $pos): Column
     {
-        if (!array_key_exists($pos, $this->columns)) {
+        if (!$this->hasColumn($pos)) {
             throw new \RuntimeException(sprintf('Column position %s does not exist!', $pos));
         }
 
@@ -124,7 +135,7 @@ final class Table
      */
     public function dropColumn(int | string $pos): Table
     {
-        if (array_key_exists($pos, $this->columns)) {
+        if ($this->hasColumn($pos)) {
             $this->column_count--;
         }
         unset($this->columns[$pos]);
